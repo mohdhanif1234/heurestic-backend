@@ -1,12 +1,12 @@
 import express from "express"
 import { users } from "./constants.js"
+import { mockUsers } from "./constants.js"
 
 const app = express()
 
 
 const PORT = 8080
 let userCount = 0
-const mockUser = []
 
 const logMiddleware = (req, res, next) => {
     userCount++
@@ -29,6 +29,8 @@ const logMiddleware2 = (req, res, next) => {
 }
 // app.use(logMiddleware, logMiddleware2)
 app.use(express.json())
+app.use(express.static('public'))
+app.use(express.static('files'))
 
 // route for getting all users
 app.get('/', (req, res) => {
@@ -96,6 +98,63 @@ app.post('/add/user', (req, res) => {
         msg: 'User created successfully',
         user: mockUser
     });
+})
+
+// put request
+app.put('/api/put/:id', (req, res) => {
+    const { id } = req.params
+
+    console.log('Request body---', req.body)
+
+    const parsedId = parseInt(id);
+
+    if (isNaN(parsedId)) return res.json({ msg: 'Bhai kya kar raha hai tu' });
+
+    const index = mockUsers.findIndex(user => user.id === parsedId)
+
+    console.log('Index----', index)
+
+    if (index === -1) return res.status(404).json({ msg: 'User nor found' })
+
+    mockUsers[index] = { id: parsedId, ...req.body }
+
+    return res.status(200).json({
+        msg: 'User details updated successfully',
+        user: mockUsers
+    })
+})
+
+//patch request
+app.patch('/api/patch/:id', (req, res) => {
+    const { id } = req.params;
+
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) return res.json({ msg: 'Please enetr a valid id' });
+
+    const index = mockUsers.findIndex(user => user.id === parsedId);
+
+    if (index === -1) return res.status(404).json({ msg: 'User not found' });
+
+    mockUsers[index] = { ...mockUsers[index], ...req.body }
+
+    return res.status(200).json({
+        msg: 'User updated successfully',
+        users: mockUsers
+    })
+})
+
+// delete request
+app.delete('/api/delete/:id', (req, res) => {
+    const { id } = req.params;
+    const parseId = parseInt(id);
+    const index = mockUsers.findIndex(user => user.id === parseId)
+
+    mockUsers.splice(index, 1)
+
+    return res.status(200).json({
+        msg: 'User deleted successfully',
+        users: mockUsers
+    })
 })
 
 app.listen(PORT, () => {
